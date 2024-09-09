@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="../CSS/flexo.css" ref="stylesheet" />
+        <link rel="../CSS/robot.css" ref="stylesheet" />
+        <link rel="../CSS/materialdesignicons.min.css" ref="stylesheet" />
+        <link rel="../CSS/vuetify.min.css" ref="stylesheet" />
+        <link rel="../CSS/rainbowthemes/monokai.css" ref="stylesheet" />
+        <!-- <link rel="shortcut icon" href="../IMAGES/.." type="imagen/x-icon" /> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui" />
+        <title>SELECTPRO</title>
+        <style>
+            html {
+                overflow-y: auto;
+            }
+            .swal2-popup {
+                font-family: Flexo !important;
+            }
+            .flexo-app {
+                font-family: Flexo !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+          <v-app class="flexo-app">
+            <v-main>
+              <v-app-bar app clipped-left color="primary" dark>
+                <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+                <!-- <v-img class="ml-1 mr-3" src="../images/bcp_light.svg" max-width="80"></v-img> -->
+                <v-app-bar-title>
+                  <div class="text-no-wrap">
+                    <strong><i>Universidad Peruana de Ciencias Aplicadas</i></strong>
+                  </div>
+                </v-app-bar-title>
+              </v-app-bar>
+              <v-navigation-drawer v-model="drawer" app clipped>
+                <v-list nav dense>
+                  <v-list-item-group v-model="proyecto" mandatory color="primary">
+                    <v-list-item v-for="(p, i) in proyectos" :href="`./${p.nombre}.html`" :key="i" :value="p.nombre">
+                      <v-list-item-title v-text="`${p.titulo}`"></v-list-item-title>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+              </v-navigation-drawer>
+              <v-container> {% block content %}{% endblock %} </v-container>
+            </v-main>
+          </v-app>
+        </div>
+
+        <script src="../eel.js"></script>
+        <script src="../js/vue.min.js"></script>
+        <script src="../js/vuetify.min.js"></script>
+        <script src="../js/sweetalert2.all.min.js"></script>
+        <script src="../js/rainbow-custom.min.js"></script>
+        {% block script %}{% endblock %}
+        <script>
+            app = new Vue({
+              el: "#app",
+              vuetify: new Vuetify({
+                theme: {
+                  themes: {
+                    light: {
+                      primary: "#002a8d",
+                      accent: "#ff7800",
+                      secondary: "#001f5a",
+                    },
+                  },
+                },
+              }),
+              delimiters: ["@{", "}"],
+              data: {
+                ...config.data,
+                drawer: false,
+                proyectos: [
+                  {
+                    icono: "",
+                    nombre: "home",
+                    titulo: "Inicio",
+                  },
+                  {
+                    icono: "",
+                    nombre: "modeloGeneral",
+                    titulo: "Modelo General",
+                  },
+                  {
+                    icono: "",
+                    nombre: "modeloUnico",
+                    titulo: "Modelo Único"
+                  }
+                ],
+              },
+              methods: {
+                ...config.methods,
+                procesar: async function (parametros) {
+                    // Asignacion
+                    const titulo = parametros.titulo;
+                    const proyecto = parametros.proyecto;
+                    const funcion = parametros.funcion;
+                    const params = parametros.params;
+                    const validacion_funcion = parametros.funcion_validacion;
+                    const accion = parametros.accion;
+                    const accion_funcion = parametros.accion_funcion;
+                    const accion_texto = parametros.accion_texto;
+                    // Logica
+                    let swalResult = await swalUPC.fire({
+                    title: titulo,
+                    html: `Proceso ${titulo} se va a ejecutar. Por favor confirmar<br>
+                        <div style="margin: 5px; padding: 5px; text-align: left;">
+                        <pre><code data-language="json">${JSON.stringify(params, null, 2)}</code></pre></div>`,
+                    icon: "question",
+                    showConfirmButton: true,
+                    showCancelButton: true,
+                    showDenyButton: false,
+                    didOpen: function () {
+                        Rainbow.color();
+                    },
+                    });
+                    if (!swalResult.isConfirmed) return;
+                    // Validacion
+                    if (validacion_funcion) {
+                    swalUPC.fire({
+                        title: titulo,
+                        html: "Se están realizando las validaciones respectivas. Espera unos minutos",
+                        icon: "info",
+                        showConfirmButton: false,
+                        showCancelButton: false,
+                        showDenyButton: false,
+                        willOpen: function () {
+                        swalUPC.showLoading(swalUPC.getConfirmButton());
+                        },
+                    });
+                    const pyResultVal = await eel.procesar(proyecto, validacion_funcion, params)();
+                    // Validacion fallo
+                    if (pyResultVal.error) {
+                        swalUPC.fire({
+                        title: titulo,
+                        html: `¡Error en la validación! Por favor comunicarse con Cristhian Laines o Cesar Matos<br><br>
+                        ${pyResultVal.error.resumen}<br><br>
+                        Duración: ${pyResultVal.duracion.minutos}m ${pyResultVal.duracion.segundos}s.`,
+                        footer: pyResultVal.error.detalle,
+                        icon: "error",
+                        showConfirmButton: true,
+                        showCancelButton: false,
+                        showDenyButton: false,
+                        });
+                        return;
+                    }
+                    // Validacion no paso
+                    if (!pyResultVal.resultado.estado) {
+                        swalUPC.fire({
+                        title: titulo,
+                        html: `¡Validación no adecuada! Por favor revisa tus conexiones y parámetros.<br><br>
+                            ${pyobjVal.resultado.resumen}.<br><br>
+                            Duración: ${pyobjVal.duracion.minutos}m ${pyobjVal.duracion.segundos}s.`,
+                        icon: "error",
+                        showConfirmButton: true,
+                        showCancelButton: false,
+                        showDenyButton: false,
+                        });
+                        return;
+                    }
+                    // Validacion si paso
+                    swalResult = await swalUPC.fire({
+                        title: titulo,
+                        html: `¡Validación exitosa! Duró ${pyobjVal.duracion.minutos}m ${pyobjVal.duracion.segundos}s. ¿Desea continuar?`,
+                        icon: "question",
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                        showDenyButton: false,
+                    });
+                    if (!swalResult.isConfirmed) return;
+                    }
+                    // Ejecucion
+                    swalUPC.fire({
+                    title: titulo,
+                    html: "Modelo en ejecución... Por favor espera unos minutos.",
+                    icon: "info",
+                    showConfirmButton: false,
+                    showCancelButton: false,
+                    showDenyButton: false,
+                    willOpen: function () {
+                        swalUPC.showLoading(swalUPC.getConfirmButton());
+                    },
+                    });
+                    const pyResultEjec = await eel.procesar(proyecto, funcion, params)();
+                    // Ejecucion fallo
+                    if (pyResultEjec.error) {
+                    swalUPC.fire({
+                        title: titulo,
+                        html: `¡Error en la ejecución! Por favor comunicarse con Cristhian Laines o Cesar Matos<br><br>
+                        ${pyResultEjec.error.resumen}<br><br>
+                        Duración: ${pyResultEjec.duracion.minutos}m ${pyResultEjec.duracion.segundos}s.`,
+                        footer: `<textarea rows="5" readonly style="width: 100%; resize: vertical;">${pyResultEjec.error.detalle}</textarea>`,
+                        icon: "error",
+                        showConfirmButton: true,
+                        showCancelButton: false,
+                        showDenyButton: false,
+                    });
+                    return;
+                    }
+                    // Ejecucion retorno valor
+                    let valor = "";
+                    if (pyResultEjec.resultado) valor = `<br><br>Estado: ${pyResultEjec.resultado}`;
+                    // Ejecucion satisfactoria
+                    swalResult = await swalUPC.fire({
+                    title: titulo,
+                    html: `¡Ejecución exitosa!${valor}<br><br>Duración: ${pyResultEjec.duracion.minutos}m ${pyResultEjec.duracion.segundos}s.`,
+                    icon: "success",
+                    confirmButtonText: accion ? accion_texto : window.swalUPCConfig.confirmButtonText,
+                    cancelButtonText: accion ? "Cerrar" : window.swalUPCConfig.cancelButtonText,
+                    showConfirmButton: true,
+                    showCancelButton: accion ? true : false,
+                    showDenyButton: false,
+                    });
+                    if (swalResult.isConfirmed && accion) {
+                    eel.procesar(proyecto, accion_funcion, params);
+                    }
+                },
+                },
+                mounted: function () {
+                if (!this.drawer && !this.$vuetify.breakpoint.mobile) {
+                    this.drawer = true;
+                }
+                window.swalUPCConfig = {
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    keydownListenerCapture: true,
+                    confirmButtonColor: "#002a8d",
+                    cancelButtonColor: "#8c0e41",
+                    confirmButtonText: "OK",
+                    denyButtonText: "No",
+                    cancelButtonText: "Cancelar",
+                };
+                window.swalUPC = swal.mixin(window.swalUPCConfig);
+                },
+            });
+        </script>
+    </body>
+</html>

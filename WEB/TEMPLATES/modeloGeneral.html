@@ -1,0 +1,44 @@
+{% extends '__layout__.html' %} {% block content %}
+<h2>
+    <strong><i>SelectPro - General</i></strong>
+</h2>
+<v-divider class="mt-1 mb-3"></v-divider>
+<v-row>
+    <v-col xs="12" sm="6" lg="4">
+        <v-card elevation="3">
+            <v-card-title><strong>Ingresar datos para generar talentos más contratables</strong></v-card-title>
+            <v-card-text>
+            <v-menu ref="unidadModeloPicker" v-model="unidadModeloPicker" :close-on-content-click="false" :return-value.sync="unidadModelo" 
+            transition="scale-transition" max-width="290px" min-width="auto">
+                <v-select v-model="unidadModelo" :items="unidades" label="Selecciona una unidad" @change="setUnidadModelo" outlined dense></v-select>
+            </v-menu>
+            <v-btn block color="primary" @click="generarTalentos">Generar</v-btn>
+            </v-card-text>
+        </v-card>
+        <v-expansion-panels>
+            <v-expansion-panel>
+                <v-expansion-panel-header>Lista de Talentos</v-expansion-panel-header>
+                <v-expansion-panel-content>
+                    <v-list>
+                        <v-list-item v-for="(talento, index) in talentos" :key="index">
+                            <v-list-item-content>{{talento}}</v-list-item-content>
+                        </v-list-item>
+                    </v-list>
+                </v-expansion-panel-content>
+            </v-expansion-panel>
+        </v-expansion-panels>
+    </v-col>
+</v-row>
+{% endblock %} {% block script %}
+<script>
+    config = {
+        data: {
+            proyecto: "modeloGeneral",
+            unidadModeloPicker: "",
+            unidadModelo: ""
+        },
+        methods: {
+            setUnidadModelo: function ()
+        }
+    }
+</script>
