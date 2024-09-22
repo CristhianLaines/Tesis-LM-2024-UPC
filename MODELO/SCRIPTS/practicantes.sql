@@ -28,5 +28,6 @@ FROM BCP_GDH_PA_DW.GENERAL.BASE_COMPLETA A
 WHERE 
     A.TIPO_PREPER = 'Practicante' AND 
     A.Sociedad = 'BCP Perú' AND 
-    A.nxt_Tipo_PrePer = 'ultimo registro'
+    A.nxt_Tipo_PrePer = 'ultimo registro' AND
+	A.STATUS = 'CESADO'
 ORDER BY A.periodo DESC

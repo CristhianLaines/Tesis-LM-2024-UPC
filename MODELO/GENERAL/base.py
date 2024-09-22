@@ -15,8 +15,14 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 
+from GENERAL.conexion import get_mssql_conn
+
 def columnas(df: pd.DataFrame, dic_cols: Dict[str, str]):
     df = df.rename(columns=dic_cols)
     arr_cols = [v for k,v in dic_cols.items()]
     df = df[arr_cols]
     return df
+
+def read_data(script) -> pd.DataFrame:
+    conn = get_mssql_conn()
+    return pd.read_sql_query(script, conn)
